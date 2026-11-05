@@ -1,0 +1,111 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Python 输出中文乱码与环境变量作用范围 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="python">Python 输出中文乱码与环境变量作用范围</h1>
+<p>日期：2026-11-05<br />
+分类：计算机与工具 → Python 与 Windows<br />
+关键词：UTF-8、乱码、PowerShell、环境变量、User</p>
+<p><strong>核心结论：读入、打印、显示是不同环节。只设置读入编码，不能保证最终中文显示正确；相邻环节的编码和解码方式需要一致。</strong></p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：读入、打印、显示各有编码；User 保存到用户范围，不会直接刷新已运行进程。</li>
+<li><strong>用时查阅</strong>：Python 写法、PowerShell 命令和环境变量名。</li>
+<li><strong>可以要求 Codex</strong>：请定位乱码在哪个环节，并说明设置影响哪个进程、如何验证。</li>
+</ul>
+<h2 id="_2">我遇到了什么问题</h2>
+<p>读取 Codex 聊天的 Python 脚本已经写了 <code>encoding="utf-8"</code>，也用了 <code>ensure_ascii=False</code>，但打印出的中文仍然乱码。我接着问：有没有长期有效的设置？命令里的 <code>User</code> 又是什么意思？</p>
+<h2 id="_3">为什么读入正确仍然可能乱码</h2>
+<p>这次数据经过的路径是：</p>
+<pre><code class="language-text">Codex App Server 输出字节
+    → Python 解码为字符串
+    → print 把字符串编码为字节
+    → 终端或工具读取并显示
+</code></pre>
+<p>下面两项各管一件事：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>管什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Popen(..., text=True, encoding="utf-8")</code></td>
+<td>子进程管道的文本编码与解码；读取 stdout 时按 UTF-8 解码</td>
+</tr>
+<tr>
+<td><code>json.dumps(data, ensure_ascii=False)</code></td>
+<td>保留 JSON 中的中文字符，避免转成 <code>\uXXXX</code>；不决定打印编码</td>
+</tr>
+</tbody>
+</table>
+<p>如果 Python 打印时使用 cp936，而下游按 UTF-8 读取，就仍可能乱码。Windows 下实际编码取决于 Python 版本和输出是否连接控制台、管道或文件，不能一概说“Windows 默认都是 GBK”。</p>
+<p>在本次聊天读取过程中，给 Python 的标准输出显式设置 UTF-8 后，重新读取的中文恢复正常。这支持问题出在输出链路的判断，并不意味着所有乱码都由同一原因造成。</p>
+<h2 id="_4">在脚本中处理</h2>
+<p>对于本次这类普通 Python 命令行脚本，可在打印前写：</p>
+<pre><code class="language-python">import sys
+
+sys.stdout.reconfigure(encoding=&quot;utf-8&quot;)
+sys.stderr.reconfigure(encoding=&quot;utf-8&quot;)
+</code></pre>
+<p>它调整当前脚本的标准输出和错误输出；接收端也需要按 UTF-8 读取。读取子进程时的 <code>encoding="utf-8"</code> 仍需保留。</p>
+<p>如果文件内容本身已经损坏，改变打印编码不会把损坏的数据恢复回来，应回到原始数据重新读取。</p>
+<h2 id="user">环境变量里的 User 是什么意思</h2>
+<p>环境变量可以理解为程序启动时读取的一组设置。下面是 <strong>PowerShell 命令</strong>：</p>
+<pre><code class="language-powershell">[Environment]::SetEnvironmentVariable('PYTHONIOENCODING', 'utf-8', 'User')
+</code></pre>
+<p>它把 <code>PYTHONIOENCODING=utf-8</code> 持久保存到当前 Windows 用户的环境变量中。第三个参数 <code>User</code> 表示保存范围，不是用户名，也不是文件后缀。</p>
+<table>
+<thead>
+<tr>
+<th>范围</th>
+<th>保存位置和影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Process</code></td>
+<td>当前进程的环境；之后启动的子进程通常继承，进程结束后不再保留</td>
+</tr>
+<tr>
+<td><code>User</code></td>
+<td>当前 Windows 用户的持久设置，通常不需要管理员权限</td>
+</tr>
+<tr>
+<td><code>Machine</code></td>
+<td>整台计算机的持久设置，通常需要管理员权限</td>
+</tr>
+</tbody>
+</table>
+<p>写入 <code>User</code> 不会直接更新已运行的 PowerShell 或 Codex 进程。通常需要重开终端；如果 Python 由 Codex 启动，也可能需要完全退出并重启 Codex，让新的进程继承设置。</p>
+<p>若只想在当前 PowerShell 中试用，可先写：</p>
+<pre><code class="language-powershell">$env:PYTHONIOENCODING = 'utf-8'
+python -c &quot;import sys; print(sys.stdout.encoding); print('中文测试')&quot;
+</code></pre>
+<p>这只修改当前进程及其后续子进程的环境，不写入用户持久设置。</p>
+<p><code>PYTHONIOENCODING</code> 主要控制 Python 标准流的编码，不会统一普通文件读写的编码，也不保证修复所有终端问题。Python 对 Windows 交互控制台还存在特殊处理，管道与重定向文件的行为应与直接控制台输出区分。详见 <a href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONIOENCODING">Python 官方说明</a>。</p>
+<h2 id="_5">回顾时先回答</h2>
+<ol>
+<li>为什么 <code>Popen</code> 中指定 UTF-8 后，<code>print</code> 仍可能乱码？</li>
+<li><code>ensure_ascii=False</code> 是否等于“输出使用 UTF-8”？</li>
+<li><code>User</code> 和 <code>Process</code> 的区别是什么？为什么修改后可能需要重启 Codex？</li>
+</ol>
+<details>
+<summary>展开查看答案</summary>
+
+1. 读入和打印是不同环节；打印与接收端之间仍可能发生编码不一致。
+2. 不是，它只影响 JSON 是否使用 Unicode 转义。
+3. `User` 持久保存到当前用户设置，`Process` 只保存在当前进程环境。已运行的 Codex 不会因此自动刷新自己的环境。
+
+</details>
+
+<h2 id="_6">来源</h2>
+<ul>
+<li>原始聊天：Python 脚本为什么乱码（私人资料，未公开）</li>
+<li>相关聊天：模型上下文与配置讨论（私人资料，未公开），其中也讨论了输出编码。</li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.environment.setenvironmentvariable">Microsoft 官方说明：SetEnvironmentVariable</a>，用于核对 Process、User 和 Machine 的作用范围。</li>
+</ul>
+<p>本笔记记录方法与原理；不代表已修改本机持久环境变量。</p></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

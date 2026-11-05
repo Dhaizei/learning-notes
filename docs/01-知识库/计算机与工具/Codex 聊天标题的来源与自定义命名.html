@@ -1,0 +1,39 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 聊天标题的来源与自定义命名 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="codex">Codex 聊天标题的来源与自定义命名</h1>
+<p>核对日期：2026-11-05<br />
+分类：计算机与工具 → Codex</p>
+<p><strong>公开代码存在用最早用户消息生成初始标题和预览的路径；我们采用理解主题后主动重命名的方式，使用“分类：主题”。</strong></p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：预览与名称不同；助手改名约定没有改变应用默认算法。</li>
+<li><strong>用时查阅</strong>：源码行号、接口参数和命名操作。</li>
+<li><strong>可以要求 Codex</strong>：主题明确后按分类与主题命名，并回读确认保存结果。</li>
+</ul>
+<h2 id="_2">默认标题为什么像开场白</h2>
+<p>源码中，标题为空时会将去掉包装前缀的用户消息设为标题，最早的消息也用于预览。这段路径没有调用模型总结主题。<a href="https://github.com/openai/codex/blob/5112ce6edeb95f2296a5ffec47dbab4764e65853/codex-rs/state/src/extract.rs#L191-L208">存储层代码</a></p>
+<p>命令行聊天列表优先显示明确设置的名称，否则显示预览，然后根据可用宽度截短。<a href="https://github.com/openai/codex/blob/5112ce6edeb95f2296a5ffec47dbab4764e65853/codex-rs/tui/src/resume_picker.rs#L1282-L1284">名称选择</a> · <a href="https://github.com/openai/codex/blob/5112ce6edeb95f2296a5ffec47dbab4764e65853/codex-rs/tui/src/resume_picker.rs#L3310-L3313">显示截断</a></p>
+<p>这些证据说明公开存储层与命令行的行为，不足以证明所用桌面版本的全部标题生成逻辑都相同。最初直接说“桌面端就是截取第一句话”过于确定，应保留这个边界。</p>
+<h2 id="_3">我选择的命名方式</h2>
+<ul>
+<li><code>学习库：知识整理与维护</code></li>
+<li><code>Python：中文乱码与环境变量</code></li>
+<li><code>Git：多任务 worktree 协作</code></li>
+</ul>
+<p>新聊天主题明确后命名一次；用户指定的标题优先，主题没有明显变化就不反复修改。</p>
+<h2 id="_4">怎样让标题落地</h2>
+<p>优先使用应用提供的标题工具；缺失时检查官方 <code>thread/name/set</code>。本机 schema 已确认参数为 <code>threadId</code> 和 <code>name</code>，设置后用 <code>thread/read</code> 回读名称。<a href="https://learn.chatgpt.com/docs/app-server">官方接口</a></p>
+<p>本聊天已成功改名为“学习库：知识整理与维护”。偏好已写入全局 AGENTS.md；这属于助手执行的约定，没有修改应用内置标题算法，也没有后台定时改名程序。新聊天是否主动执行还需要验收。</p>
+<h2 id="_5">回顾问题</h2>
+<ul>
+<li>内容预览和明确设置的聊天名称有什么区别？</li>
+<li>全局命名约定是否等于改变应用默认命名算法？</li>
+</ul>
+<h2 id="_6">来源</h2>
+<ul>
+<li>原始讨论与本机验证（私人资料，未公开）</li>
+<li><a href="https://learn.chatgpt.com/docs/projects#organize-projects-and-chats">官方标题建议</a></li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

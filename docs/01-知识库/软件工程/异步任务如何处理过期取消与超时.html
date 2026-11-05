@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>异步任务如何处理过期取消与超时 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">异步任务如何处理过期取消与超时</h1>
+<p>整理日期：2026-11-05<br />
+分类：软件工程 → 异步任务</p>
+<p><strong>一个结果计算成功，不代表现在仍然有资格使用。任务身份、状态版本和剩余时间都需要检查。</strong></p>
+<h2 id="_2">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：结果晚回来可能已失效；取消不等于撤销，超时信号不等于强制退出。</li>
+<li><strong>用时查阅</strong>：取消信号 API、版本字段和超时数值。</li>
+<li><strong>可以要求 Codex</strong>：请检查旧结果能否写入新会话，并说明无法取消时的行为。</li>
+</ul>
+<h2 id="_3">为什么旧结果会出问题</h2>
+<p>模型还在规划羊了个羊时，用户切到了星露谷。几秒后旧规划返回，如果程序只判断“请求成功”，就可能对新游戏执行旧动作，或者播报已经过时的解说。</p>
+<p>设计上可给任务关联 <code>gameId</code>、<code>sessionId</code>、状态版本和取消信号：</p>
+<ul>
+<li>游戏 ID 表明结果属于哪个游戏。</li>
+<li>会话 ID 区分同一游戏的不同运行阶段。</li>
+<li>状态版本区分操作依据的新旧。</li>
+<li>取消信号通知参与步骤停止工作。</li>
+</ul>
+<p>在执行或写入前重新核对这些信息，避免失效结果继续产生影响。</p>
+<p>版本不能仅用不断变化的帧号或时间戳，否则实时游戏可能一直被判过期；也不能忽略动作依赖的重要变化。复查与实际输入之间仍可能发生状态变化，所以执行器需在输入边界校验版本或动作前提。一次预检查不提供原子操作保证。</p>
+<h2 id="_4">整轮截止时间与单次超时</h2>
+<p>如果每次请求最多 30 秒，重试三次就可能接近 90 秒，另外还有排队和退避等待。</p>
+<p>整轮预算可以设定一个固定截止时刻，后续各阶段只使用剩余时间：</p>
+<pre><code class="language-text">剩余时间 = 截止时刻 - 当前时刻
+</code></pre>
+<p>排队、请求、重试和格式修复都要受这一截止时间约束。可以另设阶段上限，但重试不能凭空重新获得完整预算。这里的秒数只是解释用的例子，不是推荐生产配置。</p>
+<p>截止时间通常触发取消信号，不代表强制停止整个进程。本项目生成预算明确不包含语音播放，清理也可能继续占用调度槽；游戏运行器遇到不响应取消的操作会等待，而不提前开放新游戏输入。这是安全与及时恢复之间的取舍，不能承诺到点全部退出。</p>
+<p>Harness 的处理又有所不同：character-provider.mjs（私人资料，未公开）尝试终止子进程，并在约 3 秒后兜底结束等待。兜底返回并不证明子进程已退出，尤其不能据此排除终止失败时的残留。本次已核对这一代码路径，但没有通过故障注入确认残留是否实际发生；它应保留为待验证风险。</p>
+<h2 id="_5">取消不是撤销已经发生的事</h2>
+<pre><code class="language-mermaid">flowchart LR
+    A[提出取消] --&gt; B{外部操作开始了吗}
+    B --&gt;|还在排队| C[检查取消信号，阻止开始]
+    B --&gt;|已经提交| D[尝试停止或核实实际结果]
+    D --&gt; E[只有证据支持时报告取消成功]
+</code></pre>
+<p>图示只说明判断顺序；能否真正停止，取决于执行器与下游能力。</p>
+<p>点歌尚在队列时，取消可以阻止它开始；如果已提交给播放器，能否撤回取决于播放器是否提供相关能力，不能一律报告取消成功。</p>
+<p>因此要区分等待中、已提交、已确认、结果未知等状态。整轮取消后，即使外部操作已经发生，旧结果也不能随意写回新会话。</p>
+<p>同样，已播出的首句无法撤回，应按确认的实际播报记录部分对话；不能把未播完的文本当作观众已听到的内容。</p>
+<h2 id="_6">回顾问题</h2>
+<ul>
+<li>单次请求成功后，执行前还需要检查什么？</li>
+<li>为什么“每次请求超时 30 秒”不能保证整轮 30 秒内结束？</li>
+<li>取消一个任务，是否代表外部操作已经撤销？</li>
+</ul>
+<h2 id="_7">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 1、4、15 至 17 轮。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

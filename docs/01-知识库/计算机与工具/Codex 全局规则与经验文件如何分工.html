@@ -1,0 +1,58 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 全局规则与经验文件如何分工 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="codex">Codex 全局规则与经验文件如何分工</h1>
+<p>核对日期：2026-11-05<br />
+分类：计算机与工具 → Codex</p>
+<p><strong>核心行为写在 AGENTS.md 中并保持独立可执行；经验背景可以放在 LESSONS.md，按需查阅。保存规则不等于证明助手会正确执行。</strong></p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：核心规则独立可执行；文件存在、规则加载、实际执行是不同阶段。</li>
+<li><strong>用时查阅</strong>：文件发现顺序、大小上限和具体位置。</li>
+<li><strong>可以要求 Codex</strong>：请检查生效的规则来源，并用实际任务验证行为，不只展示文件。</li>
+</ul>
+<h2 id="_2">两类文件的用途</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>放什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Codex 用户目录中的 <code>AGENTS.md</code></td>
+<td>跨项目通用的简短行为规则</td>
+</tr>
+<tr>
+<td><code>study/AGENTS.md</code></td>
+<td>本学习目录的记录、分类和维护约定</td>
+</tr>
+<tr>
+<td>Codex 用户目录中的 <code>LESSONS.md</code></td>
+<td>失误原因、接口细节和验证案例</td>
+</tr>
+</tbody>
+</table>
+<p>默认 Codex 用户目录是当前用户主目录下的 <code>.codex</code>，也可通过 <code>CODEX_HOME</code> 指定。全局发现时优先使用非空 <code>AGENTS.override.md</code>，否则使用 <code>AGENTS.md</code>；项目指令也有覆盖关系和大小限制。普通 <code>LESSONS.md</code> 没有专门的默认自动加载地位。<a href="https://learn.chatgpt.com/docs/agent-configuration/agents-md">官方加载说明</a></p>
+<h2 id="_3">为什么不强制每次读经验文件</h2>
+<p>只要执行所需的信息已经完整写在 AGENTS.md，执行规则就不必依赖另一个文件。额外文件适合存放较长的细节。这是本次采用的维护设计，不是官方强制的分工。</p>
+<p>例如核心规则可以直接要求：缺少聊天工具时检查 App Server，实际读取正文后才能声称读过。需要具体分页参数时，再查 LESSONS.md。</p>
+<h2 id="_4">怎样判断规则有效</h2>
+<p>依次检查三件事：规则是否加载、是否理解正确、是否实际执行。一次成功不能保证以后永不复发，也没有数据支持具体的改善比例。</p>
+<p>本次新聊天的验收截图显示，助手报告使用只读接口，并给出了符合原聊天的摘要。这是初步行为证据；截图未展示完整工具记录，不能独立证明全部执行过程。</p>
+<h2 id="_5">本次纠正</h2>
+<p>全局经验最初被错误地到 <code>study</code> 下查找。后续核对发现全局 AGENTS.md 原本已包含核心动作，再次提出“把核心动作写进去”并非新增改进。最终调整是取消强制先读经验文件，并明确查阅位置。</p>
+<h2 id="_6">回顾问题</h2>
+<ul>
+<li>为什么“文件存在”和“规则执行成功”是两件事？</li>
+<li>什么适合写入规则，什么适合保留为背景资料？</li>
+</ul>
+<h2 id="_7">来源</h2>
+<ul>
+<li>本次讨论与独立 agent 复核（私人资料，未公开）</li>
+<li>本机全局规则（私人资料，未公开）</li>
+<li>本机经验文件（私人资料，未公开）</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>学习图解：成功到底证明了什么</title>
+<style>
+:root{color-scheme:light;--ink:#192b39;--muted:#536572;--line:#d4ddd9;--green:#116846;--bg:#f4f5ef}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;line-height:1.65}main{max-width:1120px;margin:auto;padding:36px 30px}.eyebrow{font-size:13px;letter-spacing:.12em;color:var(--green);font-weight:700}h1{font-size:clamp(28px,4vw,44px);line-height:1.25;margin:10px 0 14px}h2{font-size:20px;margin:0}p{margin:8px 0}.intro{max-width:820px;color:var(--muted);font-size:17px}.flow{display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:stretch;margin:28px 0}.card{border:1px solid var(--line);border-radius:16px;background:#fff;padding:22px;box-shadow:0 3px 0 #dde5dc66}.number{font-size:13px;color:var(--green);font-weight:700}.question{font-size:22px;font-weight:700;margin:6px 0}.card p{font-size:14px;color:var(--muted)}.arrow{display:flex;align-items:center;justify-content:center;font-size:24px;color:#8b9d90}.note{padding:12px 18px;border-left:4px solid #b27c25;background:#fff6e5;border-radius:0 8px 8px 0;font-size:14px}.examples{margin-top:30px}.buttons{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}button{font:inherit;font-size:14px;cursor:pointer;border:1px solid #b7c6bc;border-radius:999px;padding:9px 16px;background:transparent;color:var(--ink)}button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}button:focus-visible,a:focus-visible{outline:3px solid #a56013;outline-offset:3px}.source{font-size:13px;color:var(--muted);margin:12px 0}.results{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.result{border:1px solid var(--line);background:#fff;border-radius:12px;padding:18px}.result h3{font-size:15px;margin:0 0 10px}.badge{display:inline-block;border-radius:6px;padding:3px 9px;font-size:13px;font-weight:700}.yes{color:#075439;background:#e1f3e9}.no{color:#973821;background:#ffe9e2}.unknown{color:#795619;background:#f7efda}.detail{font-size:14px;margin-top:10px}.conclusion{margin-top:16px;border-radius:12px;background:#e6eee5;padding:18px 22px}.conclusion strong{color:var(--green)}.ask{margin-top:24px;border-top:1px solid var(--line);padding-top:18px}.ask p{font-size:16px}.footer{font-size:13px;color:var(--muted);margin-top:22px}a{color:var(--green)}
+@media(max-width:720px){main{padding:24px 18px}.flow{grid-template-columns:1fr;margin:22px 0}.arrow{height:30px;transform:rotate(90deg)}.results{grid-template-columns:1fr}.card{padding:18px}.question{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">学习图解 · 观测与评估</div>
+<h1>Codex 说“成功了”，<br>到底证明了什么？</h1>
+<p class="intro">先分清三种判断，再看它拿出了哪种证据。<strong>测试通过，不自动等于任务完成；任务完成，也不自动等于新方案更好。</strong></p>
+<section class="flow" aria-label="三种判断需要分别举证">
+ <article class="card"><div class="number">01 · 实现检查</div><div class="question">这个环节能工作吗？</div><p>看接口、代码或数据处理是否按约定运行。</p><p><strong>例：</strong>模型摘要被正确保存。</p></article>
+ <div class="arrow" aria-hidden="true">→</div>
+ <article class="card"><div class="number">02 · 任务验收</div><div class="question">你要的事情做对了吗？</div><p>看实际结果是否符合明确的验收标准。</p><p><strong>例：</strong>题目答对，或目标歌曲开始播放。</p></article>
+ <div class="arrow" aria-hidden="true">→</div>
+ <article class="card"><div class="number">03 · 效果比较</div><div class="question">比原方案更好吗？</div><p>在可比条件下，对照质量、延迟、成本等指标。</p><p><strong>例：</strong>同一测试集上更准确且满足时间要求。</p></article>
+</section>
+<p class="note">箭头表示需要补充检查，不能直接推导。每种判断分别举证；即使当前样本通过，也不保证所有未来场景都成功。</p>
+<section class="examples" aria-labelledby="examples-title">
+ <h2 id="examples-title">换一个案例，看看哪些结论站得住</h2>
+ <div class="buttons" role="group" aria-label="选择案例">
+  <button type="button" data-case="summary" aria-pressed="true">摘要保存了，答案却错了</button>
+  <button type="button" data-case="audio" aria-pressed="false">只拿到语音文件</button>
+  <button type="button" data-case="comparison" aria-pressed="false">有任务验收与前后对照</button>
+ </div>
+ <p id="case-source" class="source"></p>
+ <div class="results" aria-live="polite" aria-atomic="true">
+  <article class="result"><h3>01 实现检查</h3><span id="status-0" class="badge"></span><p id="detail-0" class="detail"></p></article>
+  <article class="result"><h3>02 任务验收</h3><span id="status-1" class="badge"></span><p id="detail-1" class="detail"></p></article>
+  <article class="result"><h3>03 效果比较</h3><span id="status-2" class="badge"></span><p id="detail-2" class="detail"></p></article>
+ </div>
+ <div class="conclusion" aria-live="polite"><strong>现在可以怎么说：</strong><p id="conclusion"></p></div>
+</section>
+<section class="ask"><h2>你需要记住的，是这句追问</h2><p>“你证明的是哪个环节？依据是什么？还有什么没有验证？”</p><p class="source">文件路径、测试命令和统计字段，用时查阅；不必背测试数量。</p></section>
+<p class="footer">这是学习图解，不是项目实时状态。<a href="../01-%E7%9F%A5%E8%AF%86%E5%BA%93/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/%E5%A6%82%E4%BD%95%E5%8C%BA%E5%88%86%E7%B3%BB%E7%BB%9F%E9%93%BE%E8%B7%AF%E6%88%90%E5%8A%9F%E4%B8%8E%E5%AE%9E%E9%99%85%E6%95%88%E6%9E%9C%E6%8F%90%E5%8D%87.html">查看完整笔记与来源</a> · 整理于 2026-11-05</p>
+</main>
+<script>
+const cases={
+ summary:{source:'来自总设计师聊天中的探针报告；本页没有重新执行测试。',rows:[['yes','有报告支持','摘要采集与保存链路跑通。'],['no','该题未通过','题目答案没有满足约束。'],['unknown','尚不能判断','没有足够的可比证据说明方案整体更好。']],conclusion:'摘要记录功能已验证，但这次解题没有通过；不能据此说模型变强了。'},
+ audio:{source:'教学假设：目前只有生成的音频文件，没有实际播放证据。',rows:[['yes','文件已生成','可以确认合成环节产生了音频文件。'],['unknown','尚未验证','还需确认播放内容及实际输出是否满足目标。'],['unknown','尚不能判断','缺少修改前后的可比质量与耗时数据。']],conclusion:'音频已经生成；实际播放和体验提升还没有验证。'},
+ comparison:{source:'教学假设：已有明确验收、相同测试条件和足够的对照样本；不是项目的实测结果。',rows:[['yes','有证据支持','目标链路按约定运行。'],['yes','样本验收通过','已检查的任务结果符合预先规定的标准。'],['yes','对照范围内改善','目标指标改善，且已检查其他相关指标没有不可接受的退化。']],conclusion:'在这组样本和测试条件下，新方案达到验收要求，并表现出改善；仍需说明适用范围。'}
+};
+function showCase(key){const value=cases[key];document.getElementById('case-source').textContent=value.source;value.rows.forEach((row,i)=>{const badge=document.getElementById('status-'+i);badge.className='badge '+row[0];badge.textContent=row[1];document.getElementById('detail-'+i).textContent=row[2];});document.getElementById('conclusion').textContent=value.conclusion;document.querySelectorAll('[data-case]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.case===key)));}
+document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener('click',()=>showCase(button.dataset.case)));
+showCase('summary');
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>模型接口与运行框架为什么要分层 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">模型接口与运行框架为什么要分层</h1>
+<p>整理日期：2026-11-05<br />
+分类：软件工程 → 架构分层</p>
+<p><strong>模型通信接口、工具循环和应用运行管理属于不同层次，不能只因名字不同就把它们当成互斥方案。</strong></p>
+<h2 id="_2">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：API、工具循环、运行器职责不同；不要把不同层次当成只能选一个。</li>
+<li><strong>用时查阅</strong>：协议字段、事件名和适配代码。</li>
+<li><strong>可以要求 Codex</strong>：请指出修改属于哪一层，以及会影响哪些调用方。</li>
+</ul>
+<h2 id="_3">我的问题</h2>
+<p>大肥羊应该继续使用 Chat Completions，迁移 Responses，还是让所有请求都经过 Harness SDK？</p>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>主要问题</th>
+<th>大肥羊里的例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>应用运行框架</td>
+<td>哪个任务先做，何时取消，结果能否播报或写入记忆？</td>
+<td>直播队列、游戏管理、语音与记忆</td>
+</tr>
+<tr>
+<td>模型适配层</td>
+<td>怎样发请求，怎样解析正文、用量和结束事件？</td>
+<td>Chat Completions、Responses</td>
+</tr>
+<tr>
+<td>工具循环</td>
+<td>模型请求工具后，怎样执行并带回结果继续生成？</td>
+<td>按需使用 Harness SDK</td>
+</tr>
+</tbody>
+</table>
+<p>Harness 在这里指围绕模型组织执行的运行支撑，不是模型本身；具体 SDK 只是其中一种实现。SDK 是帮助程序调用能力的软件开发工具包，API 是对外约定的调用接口。</p>
+<h2 id="_4">为什么采用统一适配入口</h2>
+<p>游戏模块只声明需要哪些能力、时间预算是多少，由适配层选择和转换协议。这样切换模型通信方式时，不必让每个游戏重新处理流式事件、错误和用量。</p>
+<p>原聊天采用的项目方向是：自有运行器管理应用生命周期，普通生成优先 Responses，工具轮次按需使用 Harness。这是项目设计选择，不是所有应用的固定答案。</p>
+<p>本机 <code>model-provider.mjs</code> 支持这一路由分工，但没有在本次审查中测量性能收益。原项目逐请求创建 Harness 子进程的开销不能泛化为“所有 SDK 都更慢”。聊天用 low、游戏用 medium 也只是起始配置，最佳值需按实际模型、网关、质量和延迟评估。</p>
+<p>OpenAI 官方推荐新项目使用 Responses，同时继续支持 Chat Completions；这不能证明某个第三方兼容网关已完整支持，也不能证明换接口就更快。<a href="https://developers.openai.com/api/docs/guides/migrate-to-responses">官方迁移说明</a></p>
+<h2 id="_5">迁移需要检查什么</h2>
+<p>至少检查正文、结构化输出、图片、工具结果、取消和用量。兼容回退尤其要确认是否已产生输出或外部副作用：不能因为接口切换而再次执行一次点歌或文件操作。</p>
+<h2 id="_6">回顾问题</h2>
+<ul>
+<li>为什么“用 Responses”和“用 Harness”不一定冲突？</li>
+<li>如果增加第三款游戏，哪些模型通信细节应该继续藏在适配层里？</li>
+</ul>
+<h2 id="_7">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 1、12、13 轮。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

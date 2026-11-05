@@ -1,0 +1,92 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>如何区分系统链路成功与实际效果提升 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">如何区分系统链路成功与实际效果提升</h1>
+<p>整理日期：2026-11-05<br />
+分类：软件工程 → 观测与评估</p>
+<p><strong>证明接口通了、证明任务做对了、证明上线后更好，需要不同证据。测试数量不能替代质量指标。</strong></p>
+<h2 id="_2">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：区分环节跑通、任务做对、效果改善；结论必须匹配证据。</li>
+<li><strong>用时查阅</strong>：具体统计字段、日志路径和测试命令。</li>
+<li><strong>可以要求 Codex</strong>：请把已检查、实际结果和未验证项分别列出，不用测试数量代替效果证明。</li>
+</ul>
+<h2 id="_3">先分清三个判断层次</h2>
+<ol>
+<li><strong>实现检查</strong>：程序的某个环节是否按约定工作，例如正确保存了模型返回的摘要。</li>
+<li><strong>任务验收</strong>：用户要的事情是否完成，例如这道题是否答对、歌曲是否按要求开始播放。</li>
+<li><strong>效果比较</strong>：相对于明确的基线，修改后是否更准确、更快或更稳定。</li>
+</ol>
+<p>三者需要分别举证。一次请求跑通，可以支持实现检查；若要说“这次任务做对了”，还要检查任务结果；若要说“新方案更好”，则需要明确比较条件与指标。完成这些检查也不等于保证以后所有场景都成功。</p>
+<pre><code class="language-mermaid">flowchart LR
+    A[实现检查：环节能工作吗] --&gt;|另查实际结果| B[任务验收：事情做对了吗]
+    B --&gt;|另做可比对照| C[效果比较：比原方案更好吗]
+</code></pre>
+<p>箭头表示需要补充证据，不表示自动推导。可以打开<a href="../../%E5%8F%AF%E8%A7%86%E5%8C%96/%E9%AA%8C%E6%94%B6%E8%AF%81%E6%8D%AE%E5%88%86%E5%B1%82.html">交互图解</a>，切换“答案错误”“只有音频文件”“有前后对照”三个案例，查看分别能得出什么结论。后两项是教学假设，不是项目实测。</p>
+<h2 id="_4">需要掌握与用时查阅</h2>
+<p><strong>建议掌握的判断方法：每当 Codex 声称“成功”或“提升”，追问它证明的是哪个层次。</strong> 你需要能把结论与证据对应起来，不必记住原项目的测试数量。</p>
+<p>日志文件路径、测试命令、具体统计字段和缓存计算公式主要留作查阅。遇到缓存分析时再核对字段和分母，不要求先背下来。</p>
+<h2 id="_5">总设计师聊天里的反例</h2>
+<p>原聊天报告复杂探针成功保存了推理摘要，随后复核却指出题目答错且耗时较长。因此它验证了摘要采集链路，没有验证解题质量，也不能支持调高所有任务的思考预算。</p>
+<p>推理摘要也不是模型原始内部推理。官方明确区分摘要与不公开的原始推理 tokens；支持方式因模型而异。<a href="https://developers.openai.com/api/docs/guides/reasoning">官方说明</a></p>
+<h2 id="_6">各类证据分别能说明什么</h2>
+<table>
+<thead>
+<tr>
+<th>证据</th>
+<th>主要说明什么</th>
+<th>单独不能说明什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单元与回归测试</td>
+<td>已覆盖场景符合断言</td>
+<td>真实直播一定正常</td>
+</tr>
+<tr>
+<td>网关真实请求</td>
+<td>某条协议路径可用</td>
+<td>所有能力兼容、长期稳定</td>
+</tr>
+<tr>
+<td>语音合成文件</td>
+<td>生成了音频</td>
+<td>扬声器实际播出了正确内容</td>
+</tr>
+<tr>
+<td>固定棋盘评估</td>
+<td>相同输入下的可比表现</td>
+<td>所有未知棋盘的通关率</td>
+</tr>
+<tr>
+<td>真实运行记录</td>
+<td>特定样本中的表现</td>
+<td>没有对照时的确定因果</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">排障先拆耗时</h2>
+<p>把整轮耗时拆成排队、上游响应、生成、语音合成和播放等阶段。原聊天中的样本曾显示调度等待为零、上游响应较慢，说明应先调查上游阶段；仍不能仅据此断定是网络还是模型推理导致。</p>
+<p>流式生成、合成和播放可能重叠，阶段耗时不能不加区分地相加为总耗时。还应区分“播放器报告完成”和“扬声器实际出声、观众听见”；软件事件不能单独证明后者。</p>
+<h2 id="_8">评估需要尊重未知信息</h2>
+<p>游戏评估不能把隐藏牌或截图猜测当作已知事实。至少区分动作合法性、槽位安全性、执行是否确认、耗时和用量，不把它们混成一个“表现好”。</p>
+<p>缓存分析应区分任务、模型和协议，并明确缺失数据。若比较 token 命中，可用“缓存输入 token 总数 ÷ 对应输入 token 总数”，不能不加权平均各请求百分比；字段含义需先核对。</p>
+<h2 id="codex">应用到你和 Codex 的协作</h2>
+<p>如果 Codex 说“已优化语音，全部测试通过”，可以提出：</p>
+<blockquote>
+<p>请分别说明：代码层面检查了什么，是否验证实际播放，是否有修改前后的可比数据。没有验证的部分明确标注，不要仅用测试数量证明体验提升。</p>
+</blockquote>
+<p>判断交付时看它是否回答了具体目标、测试覆盖范围、实际结果和剩余未知。如果目前只有音频文件，就只能确认生成音频；不能把直播采集、平台传输与观众实听也算作通过。</p>
+<h2 id="_9">回顾问题</h2>
+<ul>
+<li>采到了摘要，但答案错误，这次验证通过了哪一部分？</li>
+<li>如果语音合成成功，还缺什么证据才能声称直播播报正常？</li>
+<li>当数据有缺项时，为什么不应直接给出缓存未命中的原因？</li>
+</ul>
+<h2 id="_10">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 1 至 3、12 至 16 轮。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

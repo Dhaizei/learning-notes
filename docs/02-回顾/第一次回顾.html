@@ -1,0 +1,63 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第一次回顾 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../index.html">学习地图</a><a href="../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">第一次回顾</h1>
+<p>这是一份可选的自查，不是考试，也没有预先判定你的掌握程度。可以先口头回答一个问题，再展开参考答案；暂时不会时回到对应笔记即可。</p>
+<h2 id="1-codex">1 怎样判断 Codex 交付完成</h2>
+<p>Codex 说：“语音已优化，生成了音频文件，全部测试通过。”你能直接认定直播间已经能听见，而且比以前更好吗？你会追问什么？</p>
+<details>
+<summary>参考判断</summary>
+
+不能。先区分生成链路、任务结果和前后效果比较。追问音频内容是否正确、是否实际播放并进入直播链路，以及是否有可比的质量或耗时数据。测试覆盖的边界也要说明。
+
+关键不是背术语，而是能要求“把已做、已验证、未验证分别列出”。
+
+</details>
+
+<p><a href="../01-%E7%9F%A5%E8%AF%86%E5%BA%93/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/%E5%A6%82%E4%BD%95%E5%8C%BA%E5%88%86%E7%B3%BB%E7%BB%9F%E9%93%BE%E8%B7%AF%E6%88%90%E5%8A%9F%E4%B8%8E%E5%AE%9E%E9%99%85%E6%95%88%E6%9E%9C%E6%8F%90%E5%8D%87.html">回到笔记</a> · <a href="../%E5%8F%AF%E8%A7%86%E5%8C%96/%E9%AA%8C%E6%94%B6%E8%AF%81%E6%8D%AE%E5%88%86%E5%B1%82.html">交互案例</a></p>
+<h2 id="2">2 怎样看懂一个架构建议</h2>
+<p>有人说：“我们已经用了 Responses，所以不用 Harness，也不需要自己的任务运行器。”这句话混淆了什么？</p>
+<details>
+<summary>参考判断</summary>
+
+混淆了模型通信、工具循环和应用生命周期的职责。它们可以组合使用；是否需要某一层要看实际功能和所选接口能力，而不是根据名字直接排斥。可以要求列出各层负责的工作与依赖。
+
+</details>
+
+<p><a href="../01-%E7%9F%A5%E8%AF%86%E5%BA%93/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%8F%A3%E4%B8%8E%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%88%86%E5%B1%82.html">回到笔记</a></p>
+<h2 id="3">3 怎样判断执行证据</h2>
+<p>点歌已经排队，回复的 JSON 格式却错了。修复回复时，是否应该再执行一次点歌？现在能告诉用户“已经开始播放”吗？</p>
+<details>
+<summary>参考判断</summary>
+
+不应因为回复格式错误再次执行操作。需要用本轮已有记录修复表达，并说明当前只确认排队。只有收到相应执行确认，才能报告播放；缺少确认时保留未知。
+
+</details>
+
+<p><a href="../01-%E7%9F%A5%E8%AF%86%E5%BA%93/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E6%8E%88%E6%9D%83%E6%A3%80%E6%9F%A5%E4%B8%8E%E6%89%A7%E8%A1%8C%E8%AF%81%E6%8D%AE.html">回到笔记</a></p>
+<h2 id="_2">如果愿意留下反馈</h2>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>当前记录</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>验收与证据</td>
+<td>尚未回顾，不代表不会</td>
+</tr>
+<tr>
+<td>架构分层</td>
+<td>尚未回顾，不代表不会</td>
+</tr>
+<tr>
+<td>工具执行</td>
+<td>尚未回顾，不代表不会</td>
+</tr>
+</tbody>
+</table>
+<p>可以告诉助手“哪个问题卡住、哪个例子没看懂”，无需给自己打分。能否独立解释、能否换个场景应用，需要通过本人反馈判断；不能因为打开或读完文件就标为掌握。</p></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

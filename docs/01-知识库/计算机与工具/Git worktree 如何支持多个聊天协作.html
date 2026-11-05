@@ -1,0 +1,47 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Git worktree 如何支持多个聊天协作 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="git-worktree">Git worktree 如何支持多个聊天协作</h1>
+<p>核对日期：2026-11-05<br />
+分类：计算机与工具 → Git</p>
+<p><strong>worktree 为同一个 Git 仓库提供多个工作目录，适合隔离独立任务的文件修改；它不会自动同步聊天，也不会隔离所有运行资源。</strong></p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：隔离工作目录不等于隔离端口、播放器和数据库；按任务划分更合适。</li>
+<li><strong>用时查阅</strong>：Git 命令、分支名和工作目录路径。</li>
+<li><strong>可以要求 Codex</strong>：请给独立修改任务分配工作目录，并检查服务和数据是否仍共享。</li>
+</ul>
+<h2 id="_2">我的问题</h2>
+<p>多个 Codex 聊天同时修改一个项目，是否每个聊天都应该有一个“git tree”？这里更准确的名称是 Git worktree。</p>
+<p>Git worktree 是 Git 的能力。各工作目录拥有各自的检出文件、索引和 HEAD，同时共享仓库的部分数据。它可以使用独立分支，也可以使用 detached HEAD，即 HEAD 直接指向一个提交。<a href="https://git-scm.com/docs/git-worktree">Git 官方说明</a></p>
+<p>Codex 将 worktree 创建和管理集成到应用中，官方说明其管理的 worktree 默认可以在 detached HEAD 状态工作。因此“每个 worktree 必须立即建立独立分支”并不成立。<a href="https://learn.chatgpt.com/docs/environments/git-worktrees">Codex 官方说明</a></p>
+<h2 id="_3">如何分工比较合适</h2>
+<p>按独立修改任务分配工作目录，而不是机械地为每个聊天创建一个。只读审查和讨论可以共用目录。</p>
+<p>例如游戏项目可以分为“技巧学习”和“游戏运行”两个任务；各自验证修改，再由一个负责人集成。worktree 降低直接互相覆盖工作文件的风险，但合并时仍可能发生冲突。</p>
+<h2 id="_4">它没有解决什么</h2>
+<pre><code class="language-mermaid">flowchart TB
+    R[同一个 Git 仓库] --&gt; A[任务 A 的工作目录]
+    R --&gt; B[任务 B 的工作目录]
+    A -.仍可能访问.-&gt; C[同一端口、播放器或数据库]
+    B -.仍可能访问.-&gt; C
+</code></pre>
+<p>实线表示工作目录关系；虚线提醒外部资源仍需协调。</p>
+<ul>
+<li>不会自动让不同聊天知道彼此的讨论和意图，仍需交接记录。</li>
+<li>不会阻止两个进程操作同一个游戏、占用同一端口或访问同一个外部数据库。</li>
+<li>运行数据、密钥、依赖和共享状态仍需明确如何管理。</li>
+</ul>
+<h2 id="_5">多个聊天已经混改时</h2>
+<p>先暂停对共享文件的并行写入，汇总修改和验证结果；检查忽略规则，保存可回退的 Git 基线，再按任务拆分工作目录。</p>
+<p>引用聊天当时报告游戏项目尚未初始化 Git。这是当时的检查结果，不代表现在仍然如此；本学习笔记没有重新检查或修改游戏项目。</p>
+<h2 id="_6">回顾问题</h2>
+<ul>
+<li>worktree 与分支分别代表什么？</li>
+<li>为什么不同 worktree 的程序仍可能争用同一个端口？</li>
+</ul>
+<h2 id="_7">来源</h2>
+<ul>
+<li>原始讨论：学习消除技巧（私人资料，未公开）</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

@@ -1,0 +1,60 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>工具调用为什么需要授权检查与执行证据 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">工具调用为什么需要授权检查与执行证据</h1>
+<p>整理日期：2026-11-05<br />
+分类：软件工程 → 工具执行</p>
+<p><strong>模型提出动作，程序检查权限并执行，再根据真实结果回复。模型说要做、操作已提交和结果已确认，是不同状态。</strong></p>
+<h2 id="_2">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：入口检查不够；提交、执行和确认要分清，格式修复不能重放操作。</li>
+<li><strong>用时查阅</strong>：具体授权实现、工具参数和去重记录结构。</li>
+<li><strong>可以要求 Codex</strong>：请证明修复回复不会再次点歌，并说明结果未知时怎样报告。</li>
+</ul>
+<h2 id="_3">权限检查为什么不能只做一次</h2>
+<p>原聊天发现两种时序问题：收到请求时还有权限，读完请求体时任务可能已取消；音乐操作入队时有效，出队时所属轮次可能已超时。</p>
+<p>这种“检查时成立，使用时已经改变”的问题属于检查与使用之间的竞态。处理方式是在关键执行边界重新检查授权、任务身份和取消状态，而不是只在入口检查。</p>
+<p>还要区分“展示工具”和“授予权限”：不向模型展示无关工具有助于选择，但真正的授权仍需服务端执行。</p>
+<h2 id="_4">格式修复不应该重做操作</h2>
+<p>假设点歌已提交，但模型最后返回的 JSON 不合法。此时需要修复回复格式，不应该再点一次歌。</p>
+<p>修复请求可携带本轮必要的执行记录，例如操作名称、状态和简要结果。修复阶段不给再次执行该动作的机会，也不把凭据、完整文件内容或无关观众信息一起带入。</p>
+<p>要防止重试造成重复副作用，可结合操作标识、去重记录或幂等设计；具体措施取决于下游接口能力，不能仅靠提示模型“不要重复”。幂等指同一操作重复处理时，不额外产生重复效果。</p>
+<h2 id="_5">回复应该匹配证据</h2>
+<table>
+<thead>
+<tr>
+<th>已知状态</th>
+<th>可以怎样表达</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>已排队</td>
+<td>已加入队列</td>
+</tr>
+<tr>
+<td>已提交</td>
+<td>请求已发出，等待确认</td>
+</tr>
+<tr>
+<td>已确认播放</td>
+<td>已开始播放</td>
+</tr>
+<tr>
+<td>缺少确认</td>
+<td>暂时无法确认实际结果</td>
+</tr>
+</tbody>
+</table>
+<p>游戏解说也遵循同样原则：背包数量已确认增加后，才说购买完成。</p>
+<h2 id="_6">回顾问题</h2>
+<ul>
+<li>为什么入口检查通过后，出队执行前仍要再查权限？</li>
+<li>回复格式错误时，应该重试生成还是重试外部操作？</li>
+</ul>
+<h2 id="_7">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 1、5、15 至 17 轮；这里提炼的是工程原则，并非本次重新审计生产代码。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

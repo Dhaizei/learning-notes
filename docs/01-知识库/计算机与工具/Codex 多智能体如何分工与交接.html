@@ -1,0 +1,77 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 多智能体如何分工与交接 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="codex">Codex 多智能体如何分工与交接</h1>
+<p>核对日期：2026-11-05<br />
+分类：计算机与工具 → Codex</p>
+<p><strong>固定职责、按需创建；同一阶段可复用上下文，独立审查可以采用独立上下文，但两者都需要清楚的交接资料。</strong> 这是本次学习采用的工作建议，不是所有任务必须遵循的配置。</p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：按独立任务分工，明确共享文件交接；以有依据的结论结束讨论。</li>
+<li><strong>用时查阅</strong>：创建参数、上下文选项和消息接口。</li>
+<li><strong>可以要求 Codex</strong>：请列出每个 agent 的目标、可改文件、交接顺序与验收依据。</li>
+</ul>
+<h2 id="agent">什么任务适合拆给 agent</h2>
+<p>官方建议先考虑探索、测试、排障和总结等可以独立推进的工作；多人同时改代码需要更谨慎，并行还会增加 token 消耗和协调成本。<a href="https://learn.chatgpt.com/docs/agent-configuration/subagents">官方说明</a></p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>合适的安排</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>同一问题继续修复、补验证</td>
+<td>复用已掌握相关上下文的 agent</td>
+</tr>
+<tr>
+<td>边界明确、可独立推进的新任务</td>
+<td>新建 agent，提供针对性资料</td>
+</tr>
+<tr>
+<td>希望减少原方案对审查的影响</td>
+<td>新建上下文独立的审查 agent，提供目标和证据</td>
+</tr>
+<tr>
+<td>小改动、紧密依赖步骤</td>
+<td>主 agent 直接完成或顺序处理</td>
+</tr>
+</tbody>
+</table>
+<p>原聊天的超时和工具链任务都需要修改 <code>server.mjs</code>，采用串行交接；诊断或只读分析可以独立推进。另见 <a href="Git%20worktree%20%E5%A6%82%E4%BD%95%E6%94%AF%E6%8C%81%E5%A4%9A%E4%B8%AA%E8%81%8A%E5%A4%A9%E5%8D%8F%E4%BD%9C.html">worktree 协作</a>。</p>
+<h2 id="_2">专项角色不等于专用模型</h2>
+<p>叫“超时专家”主要是在分配职责，并不证明它经过该领域的专门训练。原聊天报告当时创建的 agent 继承了父聊天上下文，因此不能把这批复核称作空白上下文盲测。</p>
+<h2 id="_3">一份够用的任务交接</h2>
+<pre><code class="language-text">目标：需要解决什么，为什么要做
+范围：可改哪些文件，哪些资源需要交接
+证据：相关代码、日志和已经验证的结论
+约束：不能改变哪些行为
+验收：怎样判断完成，必须报告哪些限制
+</code></pre>
+<p>“独立上下文”不等于什么都不给。上下文缺失会导致重复调查，继承全部历史也可能带入无关信息；按任务选择资料更重要。</p>
+<h2 id="agent_1">主 agent 仍然要负责完成原任务</h2>
+<p>拆分之后还需集成、检查和汇报。原聊天曾完成“记录读取接口教训”，却遗漏最初的方案比较请求；用户提醒后才补上。这说明处理插入事项时，应保留原任务的待办，完成后返回主线。</p>
+<p>长期的架构、决策和经验应保存在项目文件中，避免只能依靠某个 agent 的聊天记忆交接。</p>
+<h2 id="_4">跨聊天讨论何时结束</h2>
+<p><strong>以原问题得到有依据的结论为停止条件，而不是以消息已经交付为停止条件。</strong> 这是用户明确的协作偏好，已写入全局 AGENTS.md。</p>
+<ul>
+<li>仍有影响判断的实质分歧或证据缺口时，在原授权范围内继续定向核对；每次往返都要推进具体问题。</li>
+<li>证据足够时交付结论、依据与适用条件，然后停止。双方口头一致不能替代事实验证，也不必追求无条件一致。</li>
+<li>已完成可行检查，仍依赖缺失数据或超范围实验时，明确“尚不能确定”、缺什么和如何验证，记录待办后结束本轮讨论。问题未被证明解决，不能靠重复讨论补出证据。</li>
+</ul>
+<p>例如总设计师交叉复核已确认六项设计边界，表述争议可以结束；Harness 的超时兜底不证明进程已退出，实际是否发生残留仍需验证。这是未决的实现风险，不因双方同意而自动解决。</p>
+<p>更正：先前“结果交付后不默认再次回信”的说法不足以作为停止标准。可以主动推进原问题的必要核查，不需要用户每次提醒继续；结案后也不自动客套往返。</p>
+<h2 id="_5">回顾问题</h2>
+<ul>
+<li>为什么 agent 越多不一定越快？</li>
+<li>什么情况下该复用已有 agent，什么情况下需要独立审查？</li>
+<li>为什么记录了教训仍不等于完成用户原任务？</li>
+<li>为什么收到一份答复不等于问题已有结论？证据暂时不足时该怎样结束本轮讨论？</li>
+</ul>
+<h2 id="_6">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 2、8 至 16、18、19 轮。第 19 轮读取时尚无最终回答，官方事实另按上述资料核对。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

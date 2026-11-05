@@ -1,0 +1,71 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>多游戏模块如何做到解耦与复用 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="_1">多游戏模块如何做到解耦与复用</h1>
+<p>整理日期：2026-11-05<br />
+分类：软件工程 → 模块设计</p>
+<p><strong>统一共同流程，让差异留在模块内部；判断解耦要看依赖与行为，不只看文件夹是否分开。</strong></p>
+<h2 id="_2">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：统一公共流程和服务，保留游戏专属规则；同进程模块不是故障沙箱。</li>
+<li><strong>用时查阅</strong>：游戏适配接口、桥接实现和注册代码。</li>
+<li><strong>可以要求 Codex</strong>：请说明共享哪些服务、隔离哪些状态，并验证旧游戏不受预期场景影响。</li>
+</ul>
+<h2 id="_3">大肥羊的三层边界</h2>
+<pre><code class="language-mermaid">flowchart TB
+    A[直播底座：人设、聊天、语音] --&gt; B[游戏运行器：启停、切换、取消]
+    B --&gt; C[羊了个羊模块：牌面、槽位、选牌]
+    B --&gt; D[星露谷候选模块：地图、背包、交互]
+    C -.请求公共能力.-&gt; E[共享模型、记录与解说服务]
+    D -.请求公共能力.-&gt; E
+</code></pre>
+<p>图中星露谷是设计示例，不表示已经接入。边界表示职责分离，不表示已实现进程级故障隔离。</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>共享什么</th>
+<th>不应知道什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>角色与直播底座</td>
+<td>人设、聊天、观众记忆、语音</td>
+<td>选牌或浇水的具体规则</td>
+</tr>
+<tr>
+<td>游戏运行器</td>
+<td>启停、切换、超时、记录</td>
+<td>槽位容量、农田和背包格式</td>
+</tr>
+<tr>
+<td>游戏模块</td>
+<td>本游戏的观察、规则、动作和验证</td>
+<td>其他游戏的内部状态</td>
+</tr>
+</tbody>
+</table>
+<p>一个游戏通过明确的服务接口请求模型、保存记录或提交解说事件，而不是读取主服务的一堆全局变量。这种把依赖从外部传入的做法称为依赖注入；测试时也可以提供替代服务。</p>
+<p>共同流程可以是“观察 → 决策 → 校验 → 执行 → 确认”。接口名称相同，不代表所有游戏必须返回同一种状态：羊了个羊关心牌面，星露谷关心地图、体力和背包。</p>
+<h2 id="_4">快慢不同的动作如何配合</h2>
+<p>星露谷方案中，模型决定“先浇水再买种子”，本地执行器处理移动、工具使用和等待动画。耗时较长的模型规划不必承担每次按键的实时控制。</p>
+<p>技能要能报告部分完成、失败原因和实际结果。例如“浇水 8 块，剩 3 块，水壶没水”，比“已按浇水键”更适合下一步决策。</p>
+<h2 id="_5">复用也要保留隔离</h2>
+<p>人格可共享，游戏规则和策略按游戏区分，钱、任务和人物关系等状态还要按存档隔离。换游戏时应使旧计划失效，并释放持续按键等输入。</p>
+<p>原聊天的做法是先用具体游戏验证公共流程，真实出现重复需求后再提取组件。地图寻路不应为了“通用”提前塞进所有游戏的必备接口。</p>
+<h2 id="_6">怎样验收</h2>
+<p>检查新游戏关闭时旧游戏是否正常、切换后有无残留动作、新模块故障是否拖垮共享聊天与语音。目录独立只是开始。</p>
+<p>当前运行器主要在同一 Node 进程内组织可信模块，并不是进程沙箱。异常捕获不能隔离同步阻塞、资源耗尽、进程退出或未纳入管理的后台任务。需要更强故障隔离时，才考虑独立进程、资源限制与监督恢复。</p>
+<p>“注册即可复用框架”不等于接入工作已完成。星露谷的 SMAPI 桥接仍是待验证方案，不能保证最快；需先确认游戏环境和控制接口，跑通一次状态读取、操作与确认闭环。</p>
+<h2 id="_7">回顾问题</h2>
+<ul>
+<li>为什么统一流程，不等于统一所有游戏数据？</li>
+<li>能否举出一个“适合共享”和一个“应留在游戏内部”的能力？</li>
+</ul>
+<h2 id="_8">来源</h2>
+<ul>
+<li>总设计师聊天（私人资料，未公开），第 4 至 9 轮；这些是项目设计与历史交付说明。</li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>

@@ -1,0 +1,14 @@
+# Public repository: allow only reviewed publication files and build tools.
+/*
+!/.gitignore
+!/README.md
+!/requirements-publish.txt
+!/scripts/
+!/docs/
+
+# Keep private sources, profile, chat evidence, and local settings on this machine.
+**/__pycache__/
+**/.env
+**/.env.*
+**/*.log
+**/.DS_Store

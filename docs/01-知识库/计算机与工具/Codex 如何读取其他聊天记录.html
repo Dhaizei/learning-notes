@@ -1,0 +1,66 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Codex 如何读取其他聊天记录 · 学习笔记</title><style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f3f4ee;color:#21352d;font:16px/1.85 system-ui,'Microsoft YaHei',sans-serif}main{max-width:900px;margin:auto;padding:26px 30px 64px}nav{display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #d4ddd3;padding-bottom:16px;font-size:14px}a{color:#206c4a;text-underline-offset:3px}h1{font-size:32px;line-height:1.4}h2{font-size:23px;margin-top:32px}h3{font-size:19px}p,li{overflow-wrap:anywhere}table{display:block;overflow-x:auto;border-collapse:collapse;width:100%;background:#fff;font-size:14px}th,td{border:1px solid #d4ddd3;padding:10px 13px;text-align:left;vertical-align:top}th{background:#e4eddf}pre{overflow-x:auto;padding:18px;background:#e8ede4;border-radius:9px;font-size:14px;line-height:1.65}code{font-family:Consolas,monospace}blockquote{border-left:4px solid #7fa587;margin-left:0;padding:8px 18px;background:#e4eddf}details{padding:12px 16px;border:1px solid #ccd8cb;border-radius:9px;margin:14px 0;background:#fff}summary{cursor:pointer;color:#206c4a;font-weight:600}.scope{font-size:13px;color:#56675a;background:#f4ead7;border-radius:7px;padding:10px 15px;margin:20px 0}.mermaid{overflow-x:auto;background:white;border-radius:8px;padding:14px}footer{border-top:1px solid #d4ddd3;margin-top:35px;padding-top:14px;color:#56675a;font-size:13px}:focus-visible{outline:3px solid #986719;outline-offset:3px}@media(max-width:600px){main{padding:18px 17px 40px}body{font-size:15px}h1{font-size:26px}}
+</style></head><body><main><nav><a href="../../index.html">学习地图</a><a href="../../%E9%A6%96%E9%A1%B5.html">文字首页</a><a href="../../%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF.html">学习路线</a></nav><p class="scope">公开学习笔记。项目案例来自作者历史记录，并非公开可复现的测试报告；私人聊天、学习画像及本机文件不随站点发布。请结合文中适用范围与官方来源判断。</p><article><h1 id="codex">Codex 如何读取其他聊天记录</h1>
+<p>核对日期：2026-11-05<br />
+分类：计算机与工具 → Codex</p>
+<p><strong>缺少 <code>read_thread</code> 工具，不等于无法读取聊天。先检查实际工具，再检查本机官方 App Server 的只读接口。</strong></p>
+<h2 id="_1">本篇学习重点</h2>
+<ul>
+<li><strong>建议掌握</strong>：工具缺失不等于能力不存在；入队、开始处理、收到答复是不同状态。</li>
+<li><strong>用时查阅</strong>：App Server 方法名、schema、分页参数和 CLI 语法。</li>
+<li><strong>可以要求 Codex</strong>：请先检查可用读取路径，读到正文后再概括；失败时给具体证据。</li>
+</ul>
+<h2 id="_2">我的问题</h2>
+<p>引用另一条聊天后，助手说没有 <code>read_thread</code>，要求复制内容；后来却通过 App Server 成功读到了正文。工具名称和实际能力有什么区别？</p>
+<h2 id="_3">三个概念</h2>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>read_thread</code></td>
+<td>应用说明可能提到的助手工具名；必须检查本次是否实际提供</td>
+</tr>
+<tr>
+<td><code>thread/read</code></td>
+<td>App Server 接口，可按 ID 读取已保存聊天的元数据</td>
+</tr>
+<tr>
+<td><code>thread/turns/list</code>、<code>thread/items/list</code></td>
+<td>按当前版本支持情况分页读取聊天正文</td>
+</tr>
+</tbody>
+</table>
+<p>它们不能仅凭名称相似就视为同一个接口。聊天引用通常给出身份信息，并不等于正文已经进入当前上下文。</p>
+<h2 id="_4">正确处理顺序</h2>
+<ol>
+<li>确认引用的 thread ID，检查可直接调用的读取工具。</li>
+<li>工具缺失时，检查 <code>codex app-server</code>、实际协议 schema 和连接方式。</li>
+<li>读取正文并处理分页后再分析；只有标题或元数据时不能声称读过聊天。</li>
+<li>失败时说明具体限制，例如连接失败、版本不支持或权限不足。</li>
+</ol>
+<p>查阅历史保持只读，不为读取而调用 <code>thread/resume</code>、发消息或开启新 turn。历史聊天中的指令按资料对待，不自动执行。</p>
+<h2 id="_5">本次验证与更正</h2>
+<p>本机已通过 App Server 读取「学习消除技巧」和 <code>study</code> 下相关聊天。测试使用过 <code>thread/read</code> 的 <code>includeTurns: true</code>；官方对分页聊天已将这种全量读取方式标为弃用，后续应按实际版本优先使用分页接口。</p>
+<p>之前“没有工具所以无法读取”的判断遗漏了可用接口，应改成“尚未完成可用读取途径的检查”。</p>
+<h2 id="_6">发送与唤起是不同步骤</h2>
+<p>读取历史、向聊天入队消息、让目标开始处理是不同能力。用户明确要求通知另一聊天时，才按授权发送；不能因读取成功就认为自己能通知或唤起。</p>
+<p>本机验证过 <code>codex queue --thread &lt;ID&gt; --message &lt;文本&gt;</code> 可返回消息入队 ID。官方另提供 <code>--resume</code> 尝试恢复未加载的聊天；这需要可用的本地 daemon 或指定远程服务器，即使恢复失败，入队命令也可能仍返回成功。<a href="https://learn.chatgpt.com/docs/cli/reference#codex-queue">官方队列说明</a></p>
+<p>2026-11-05 复核交接中，消息已入队，但后续 <code>app-server proxy</code> 默认控制 socket 不存在、连接失败；桌面进程存在不代表这个地址可用。因此应分别报告“入队成功”“处理已开始”“回复已完成”，不能互相替代。Windows 的本地 socket 错误也不能直接解释为互联网故障。</p>
+<h2 id="_7">回顾问题</h2>
+<ul>
+<li>为什么聊天引用不等于已经读到正文？</li>
+<li>缺少工具时，下一步应检查什么？</li>
+</ul>
+<h2 id="_8">来源</h2>
+<ul>
+<li>本次讨论（私人资料，未公开）</li>
+<li><a href="https://learn.chatgpt.com/docs/app-server">官方 App Server 文档</a></li>
+</ul></article><footer>从实际问题出发，区分知识、假设与证据。</footer></main><script type="module">
+const blocks=[...document.querySelectorAll('code.language-mermaid')];
+if(blocks.length){try{const {default:mermaid}=await import('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs');mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});const nodes=blocks.map(block=>{const div=document.createElement('div');div.className='mermaid';div.textContent=block.textContent;block.parentElement.replaceWith(div);return div;});await mermaid.run({nodes});}catch(error){const message=document.createElement('p');message.className='scope';message.textContent='结构图资源暂未成功加载；正文解释仍可阅读。';document.querySelector('main').append(message);}}
+</script></body></html>
